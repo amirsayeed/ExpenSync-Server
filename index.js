@@ -67,6 +67,23 @@ async function run() {
             res.send(result);
         });
 
+        app.patch('/expenses/:id', async (req, res) => {
+            try {
+                const id = req.params.id;
+                const updatedData = req.body;
+
+                const result = await expensesCollection.updateOne({
+                    _id: new ObjectId(id)
+                }, {
+                    $set: updatedData
+                });
+
+                res.send(result);
+            } catch (error) {
+                res.status(500).send(error);
+            }
+        });
+
         app.delete('/expenses/:id', async (req, res) => {
             try {
                 const id = req.params.id;
