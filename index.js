@@ -24,7 +24,19 @@ const client = new MongoClient(uri, {
 async function run() {
     try {
         // await client.connect();
-        const expensesCollection = client.db("expensync_db").collections("expenses");
+        const expensesCollection = client.db("expensync_db").collection("expenses");
+
+        app.get("/expenses", async (req, res) => {
+            const email = req.query.email;
+            let query = {};
+
+            if (email) {
+                query.userEmail = email;
+            }
+
+            const expenses = await expensesCollection.find(query).toArray();
+            res.send(expenses);
+        });
 
         app.post("/expenses", async (req, res) => {
             const expense = req.body;
