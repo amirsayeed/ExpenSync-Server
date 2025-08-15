@@ -2,7 +2,8 @@ const express = require('express')
 const cors = require('cors');
 const {
     MongoClient,
-    ServerApiVersion
+    ServerApiVersion,
+    ObjectId
 } = require('mongodb');
 const app = express();
 const port = process.env.PORT || 5000;
@@ -36,6 +37,28 @@ async function run() {
 
             const expenses = await expensesCollection.find(query).toArray();
             res.send(expenses);
+        });
+
+        app.get("/expenses/:id", async (req, res) => {
+            try {
+                const id = req.params.id;
+
+                const expense = await expensesCollection.findOne({
+                    _id: new ObjectId(id)
+                });
+
+                if (!expense) {
+                    return res.status(404).json({
+                        message: "Expense not found"
+                    });
+                }
+                res.json(expense);
+            } catch (error) {
+                console.error("Error fetching expense:", error);
+                res.status(500).json({
+                    message: "Server error"
+                });
+            }
         });
 
         app.post("/expenses", async (req, res) => {
