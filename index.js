@@ -67,6 +67,22 @@ async function run() {
             res.send(result);
         });
 
+        app.delete('/expenses/:id', async (req, res) => {
+            try {
+                const id = req.params.id;
+                const result = await expensesCollection.deleteOne({
+                    _id: new ObjectId(id)
+                });
+                res.send({
+                    deletedCount: result.deletedCount
+                });
+            } catch (err) {
+                res.status(500).send({
+                    message: 'Failed to delete expense'
+                });
+            }
+        });
+
         // await client.db("admin").command({
         //     ping: 1
         // });
