@@ -100,6 +100,45 @@ async function run() {
             }
         });
 
+        // expense summary
+        app.get("/summary", async (req, res) => {
+            try {
+                const {
+                    email
+                } = req.query;
+
+                const summary = await expensesCollection.aggregate([{
+                        $match: {
+                            userEmail: email
+                        }
+                    },
+                    {
+                        $group: {
+                            _id: "$category",
+                            value: {
+                                $sum: "$amount"
+                            },
+                        },
+                    },
+                    {
+                        $project: {
+                            _id: 0,
+                            name: "$_id",
+                            value: 1,
+                        },
+                    },
+                ]).toArray();
+
+                res.json(summary);
+            } catch (error) {
+                res.status(500).json({
+                    message: "Error fetching summary",
+                    error
+                });
+            }
+        });
+
+
         // await client.db("admin").command({
         //     ping: 1
         // });
