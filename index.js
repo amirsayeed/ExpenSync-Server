@@ -53,30 +53,34 @@ const verifyFbToken = async (req, res, next) => {
     }
 }
 
-const verifyTokenEmail = (req, res, next) => {
-    if (req.query.email !== req.decoded.email) {
-        return res.status(403).send({
-            message: 'forbidden access'
-        })
-    }
-    next();
-}
 
 async function run() {
     try {
         // await client.connect();
         const expensesCollection = client.db("expensync_db").collection("expenses");
 
-        app.get("/expenses", verifyFbToken, verifyTokenEmail, async (req, res) => {
-            const email = req.query.email;
-            let query = {};
+        app.get("/expenses", verifyFbToken, async (req, res) => {
+            try {
+                const {
+                    email,
+                    category
+                } = req.query;
 
-            if (email) {
-                query.userEmail = email;
+                let query = {};
+                if (email) query.userEmail = email;
+                if (category && category !== "All") query.category = category;
+
+                const expenses = await expensesCollection.find(query).sort({
+                    date: -1
+                }).toArray();
+                res.send(expenses);
+            } catch (error) {
+                console.error("Error fetching expenses:", error);
+                res.status(500).json({
+                    message: "Server error",
+                    error
+                });
             }
-
-            const expenses = await expensesCollection.find(query).toArray();
-            res.send(expenses);
         });
 
         app.get("/expenses/:id", verifyFbToken, async (req, res) => {
@@ -141,7 +145,7 @@ async function run() {
         });
 
         // expense summary
-        app.get("/summary", verifyFbToken, verifyTokenEmail, async (req, res) => {
+        app.get("/summary", verifyFbToken, async (req, res) => {
             try {
                 const {
                     email
